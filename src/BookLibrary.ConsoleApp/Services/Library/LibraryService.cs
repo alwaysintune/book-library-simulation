@@ -105,5 +105,35 @@ namespace BookLibrary.ConsoleApp.Services.Library
             borrowedBooks = LibraryMembers[bookRecord.LibraryCardId].Records;
             borrowedBooks.Add(bookRecord);
         }
+
+        public void ReturnBook(string ISBN, Guid libraryCardId)
+        {
+            var bookRecord = LibraryMembers[libraryCardId].Records
+                .Find(x => x.IsReturned == false &&
+                           x.ISBN == ISBN);
+
+            if (bookRecord == null)
+            {
+                throw new BookRecordNotFoundException("No record of book being borrowed was found");
+            }
+
+            if (!LibraryBooks.ContainsKey(bookRecord.ISBN))
+            {
+                throw new BookNotFoundException("Book to be returned was removed from the library. Consider adding it");
+            }
+
+            var bookInventory = LibraryBooks[bookRecord.ISBN].Inventory;
+            bookInventory.AvailableCount++;
+            bookInventory.TakenCount--;
+            bookRecord.IsReturned = true;
+
+            if (DateTime.Now > bookRecord.ReturnBy)
+            {
+                int overdueDays = DateTime.Now
+                    .Subtract(bookRecord.ReturnBy).Days;
+
+                throw new BusinessRuleException($"Book's return is {overdueDays} day(-s) overdue past the period");
+            }
+        }
     }
 }
