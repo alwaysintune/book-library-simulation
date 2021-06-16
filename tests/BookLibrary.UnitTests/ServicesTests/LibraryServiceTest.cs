@@ -254,5 +254,14 @@ namespace BookLibrary.UnitTests.ServicesTests
 
             Assert.Empty(libraryBooks);
         }
+
+        [Fact]
+        public void DeleteBook_ThrowsBookNotFoundException_WhenBookWithGivenISBNDoesNotExist()
+        {
+            void act() => _libraryService.DeleteBook("_isbn1");
+
+            BookNotFoundException exception = Assert.Throws<BookNotFoundException>(act);
+            Assert.Equal("Cannot remove a book which is not owned by the library", exception.Message);
+        }
     }
 }
