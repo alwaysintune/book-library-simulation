@@ -1,4 +1,5 @@
 ﻿using BookLibrary.ConsoleApp.Entities;
+using BookLibrary.ConsoleApp.Services.Exceptions;
 using BookLibrary.ConsoleApp.Services.Library;
 using System;
 using System.Collections.Generic;
@@ -83,6 +84,93 @@ namespace BookLibrary.UnitTests.ServicesTests
 
             Assert.Single(books);
             Assert.Equal(repeat * count, books[0].Inventory.AvailableCount);
+        }
+
+        [Fact]
+        public void BorrowBook_ThrowsArgumentException_WhenTakenOnDateIsAheadOfReturnByDate()
+        {
+            _bookRecord.ReturnBy = _dateTimeNow.AddMonths(-1);
+
+            void act() => _libraryService.BorrowBook(_bookRecord);
+
+            ArgumentException exception = Assert.Throws<ArgumentException>(act);
+            Assert.Equal("Either return by or taken on date is erroneous", exception.Message);
+        }
+
+        [Fact]
+        public void BorrowBook_ThrowsBusinessRuleException_WhenReturnByDateIsAheadOfMaximumBorrowMonths()
+        {
+            _bookRecord.ReturnBy = _dateTimeNow.AddMonths(_libraryService.MaximumBorrowMonths + 1);
+
+            void act() => _libraryService.BorrowBook(_bookRecord);
+
+            BusinessRuleException exception = Assert.Throws<BusinessRuleException>(act);
+            Assert.Equal(
+                $"Return by date may not be longer than {_libraryService.MaximumBorrowMonths} month(-s)",
+                exception.Message
+                );
+        }
+
+        [Fact]
+        public void BorrowBook_ThrowsBusinessRuleException_WhenLibraryMemberNotFound()
+        {
+            _bookRecord.ReturnBy = _dateTimeNow.AddMonths(_libraryService.MaximumBorrowMonths);
+
+            void act() => _libraryService.BorrowBook(_bookRecord);
+
+            BusinessRuleException exception = Assert.Throws<BusinessRuleException>(act);
+            Assert.Equal("Before borrowing, please register as a library member", exception.Message);
+        }
+
+        [Fact]
+        public void BorrowBook_ThrowsBookNotFoundException_WhenBookWithGivenISBNDoesNotExist()
+        {
+            _bookRecord.ReturnBy = _dateTimeNow.AddMonths(_libraryService.MaximumBorrowMonths);
+
+            Guid libraryCardId = _libraryService.RegisterLibraryMember(_libraryCard);
+            _bookRecord.LibraryCardId = libraryCardId;
+            void act() => _libraryService.BorrowBook(_bookRecord);
+
+            BookNotFoundException exception = Assert.Throws<BookNotFoundException>(act);
+            Assert.Equal("Book to be borrowed is not owned by the library", exception.Message);
+        }
+
+        [Fact]
+        public void BorrowBook_ThrowsBusinessRuleException_WhenMoreThanAllowedMaximumBorrowedBooks()
+        {
+            _bookRecord.ReturnBy = _dateTimeNow.AddMonths(_libraryService.MaximumBorrowMonths);
+
+            _libraryService.AddBook(_book, 4);
+            Guid libraryCardId = _libraryService.RegisterLibraryMember(_libraryCard);
+            _bookRecord.LibraryCardId = libraryCardId;
+
+            for (int i = 0; i < _libraryService.MaximumBorrowedBooks; i++)
+            {
+                _libraryService.BorrowBook(_bookRecord);
+            }
+
+            void act() => _libraryService.BorrowBook(_bookRecord);
+
+            BusinessRuleException exception = Assert.Throws<BusinessRuleException>(act);
+            Assert.Equal(
+                $"No more than {_libraryService.MaximumBorrowedBooks} book(-s) may be borrowed at once",
+                exception.Message
+                );
+        }
+
+        [Fact]
+        public void BorrowBook_ThrowsBusinessRuleException_WhenBookIsNotAvailable()
+        {
+            _bookRecord.ReturnBy = _dateTimeNow.AddMonths(_libraryService.MaximumBorrowMonths);
+
+            _libraryService.AddBook(_book, 1);
+            Guid libraryCardId = _libraryService.RegisterLibraryMember(_libraryCard);
+            _bookRecord.LibraryCardId = libraryCardId;
+            _libraryService.BorrowBook(_bookRecord);
+            void act() => _libraryService.BorrowBook(_bookRecord);
+
+            BusinessRuleException exception = Assert.Throws<BusinessRuleException>(act);
+            Assert.Equal("Book to be borrowed is not available at the moment", exception.Message);
         }
     }
 }
