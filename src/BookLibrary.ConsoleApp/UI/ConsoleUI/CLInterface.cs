@@ -98,7 +98,7 @@ namespace BookLibrary.ConsoleApp.UI.ConsoleUI
             DateTime publicationDateUtc;
             while (!DateTime.TryParse(input, out publicationDateUtc))
             {
-                input = ReadLineWithMessage($"Please enter a valid date. For example, {DateTime.Now:yyyy/MM//dd}");
+                input = ReadLineWithMessage($"Please enter a valid date. For example, {DateTime.Now:yyyy/MM/dd}");
             }
 
             string isbn = ReadLineWithMessage($"{nameof(Book.ISBN)}:");
@@ -138,7 +138,7 @@ namespace BookLibrary.ConsoleApp.UI.ConsoleUI
             DateTime returnByUtc;
             while (!DateTime.TryParse(input, out returnByUtc))
             {
-                input = ReadLineWithMessage($"Please enter a valid date. For example, {DateTime.Now:yyyy/MM/dd}");
+                input = ReadLineWithMessage($"Please enter a valid date. For example, {DateTime.Now}");
             }
 
             var bookRecord = new BookRecord(isbn, libraryCardId, returnByUtc);
@@ -185,7 +185,7 @@ namespace BookLibrary.ConsoleApp.UI.ConsoleUI
             ConsoleKeyInfo info = ReadChoiceWithMessage("Filter list? Y/N");
             if (info.Key == ConsoleKey.N)
             {
-                libraryBooks = _libraryService.ListAllBooks();
+                libraryBooks = _libraryService.ListAllBooks(stateFilter: BookState.None);
 
                 Console.WriteLine($"Book count: {libraryBooks.Count}");
                 foreach (var libraryBook in libraryBooks)

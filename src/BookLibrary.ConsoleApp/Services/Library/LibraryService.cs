@@ -207,6 +207,11 @@ namespace BookLibrary.ConsoleApp.Services.Library
             BookState stateFilter = BookState.Available
             )
         {
+            if(stateFilter == BookState.None)
+            {
+                return booksToFilter.ToList();
+            }
+
             Func<BookInventory, int> bookCount =
                 stateFilter switch
                 {

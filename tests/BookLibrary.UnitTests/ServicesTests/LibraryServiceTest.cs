@@ -227,7 +227,7 @@ namespace BookLibrary.UnitTests.ServicesTests
         public void ListAllBooks_ReturnsSameBook_WhenFilterEqualsBook()
         {
             _libraryService.AddBook(_book, 1);
-            List<LibraryBook> libraryBooks = _libraryService.ListAllBooks(_bookFilter);
+            List<LibraryBook> libraryBooks = _libraryService.ListAllBooks(_bookFilter, BookState.None);
 
             Assert.Equal(_book, libraryBooks[0].Book);
         }

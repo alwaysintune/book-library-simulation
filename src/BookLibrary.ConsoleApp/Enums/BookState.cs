@@ -3,6 +3,7 @@
     public enum BookState
     {
         Taken,
-        Available
+        Available,
+        None
     }
 }
