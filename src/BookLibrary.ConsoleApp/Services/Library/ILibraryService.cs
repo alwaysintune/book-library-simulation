@@ -1,5 +1,7 @@
 ﻿using BookLibrary.ConsoleApp.Entities;
+using BookLibrary.ConsoleApp.Enums;
 using System;
+using System.Collections.Generic;
 
 namespace BookLibrary.ConsoleApp.Services.Library
 {
@@ -10,5 +12,10 @@ namespace BookLibrary.ConsoleApp.Services.Library
         void BorrowBook(BookRecord bookRecord);
 
         void ReturnBook(string ISBN, Guid LibraryCardId);
+
+        List<LibraryBook> ListAllBooks(
+            BookFilter bookFilter = null,
+            BookState stateFilter = BookState.Available
+            );
     }
 }

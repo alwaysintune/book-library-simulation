@@ -1,7 +1,9 @@
 ﻿using BookLibrary.ConsoleApp.Entities;
+using BookLibrary.ConsoleApp.Enums;
 using BookLibrary.ConsoleApp.Services.Exceptions;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BookLibrary.ConsoleApp.Services.Library
 {
@@ -134,6 +136,86 @@ namespace BookLibrary.ConsoleApp.Services.Library
 
                 throw new BusinessRuleException($"Book's return is {overdueDays} day(-s) overdue past the period");
             }
+        }
+
+        public List<LibraryBook> ListAllBooks(
+            BookFilter bookFilter = null,
+            BookState stateFilter = BookState.Available
+            )
+        {
+            IEnumerable<LibraryBook> booksToFilter = LibraryBooks
+                .Values.ToList()
+                .AsEnumerable();
+
+            if (bookFilter != null)
+            {
+                if (bookFilter.Author != null)
+                {
+                    booksToFilter = FilterBooks(booksToFilter,
+                        x => x.Book.Author == bookFilter.Author);
+                }
+                if (bookFilter.Category != null)
+                {
+                    booksToFilter = FilterBooks(booksToFilter,
+                        x => x.Book.Category == bookFilter.Category);
+                }
+                if (bookFilter.Language != null)
+                {
+                    booksToFilter = FilterBooks(booksToFilter,
+                        x => x.Book.Language == bookFilter.Language);
+                }
+                if (bookFilter.ISBN != null)
+                {
+                    booksToFilter = FilterBooks(booksToFilter,
+                        x => x.Book.ISBN == bookFilter.ISBN);
+                }
+                if (bookFilter.Name != null)
+                {
+                    booksToFilter = FilterBooks(booksToFilter,
+                        x => x.Book.Name == bookFilter.Name);
+                }
+            }
+
+            List<LibraryBook> result = FilterBooksState(booksToFilter, stateFilter);
+
+            return result;
+        }
+
+        private static IEnumerable<LibraryBook> FilterBooks(
+            IEnumerable<LibraryBook> booksToFilter,
+            Func<LibraryBook, bool> filter
+            )
+        {
+            IEnumerable<LibraryBook> filteredBooks = booksToFilter
+                .Where(filter);
+
+            return filteredBooks;
+        }
+
+        private static List<LibraryBook> FilterBooksState(
+            IEnumerable<LibraryBook> booksToFilter,
+            BookState stateFilter = BookState.Available
+            )
+        {
+            Func<BookInventory, int> bookCount =
+                stateFilter switch
+                {
+                    BookState.Available => (inventory => inventory.AvailableCount),
+                    BookState.Taken => (inventory => inventory.TakenCount),
+                    _ => throw new NotSupportedException($"Trying to filter by unsupported {nameof(BookState)}"),
+                };
+
+            var result = new List<LibraryBook>();
+            foreach (var libraryBook in booksToFilter)
+            {
+                int count = bookCount(libraryBook.Inventory);
+                if (count > 0)
+                {
+                    result.Add(libraryBook);
+                }
+            }
+
+            return result;
         }
     }
 }
