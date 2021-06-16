@@ -1,4 +1,5 @@
 ﻿using BookLibrary.ConsoleApp.Entities;
+using BookLibrary.ConsoleApp.Enums;
 using BookLibrary.ConsoleApp.Services.Exceptions;
 using BookLibrary.ConsoleApp.Services.Library;
 using System;
@@ -220,6 +221,38 @@ namespace BookLibrary.UnitTests.ServicesTests
 
             BusinessRuleException exception = Assert.Throws<BusinessRuleException>(act);
             Assert.Equal($"Book's return is {overdueDays} day(-s) overdue past the period", exception.Message);
+        }
+
+        [Fact]
+        public void ListAllBooks_ReturnsSameBook_WhenFilterEqualsBook()
+        {
+            _libraryService.AddBook(_book, 1);
+            List<LibraryBook> libraryBooks = _libraryService.ListAllBooks(_bookFilter);
+
+            Assert.Equal(_book, libraryBooks[0].Book);
+        }
+
+        [Fact]
+        public void ListAllBooks_FiltersAllNonTakenBooks_WhenBookStateIsTaken()
+        {
+            _libraryService.AddBook(_book, 1);
+            List<LibraryBook> libraryBooks = _libraryService.ListAllBooks(stateFilter: BookState.Taken);
+
+            Assert.Empty(libraryBooks);
+        }
+
+        [Fact]
+        public void ListAllBooks_FiltersAllNonAvailableBooks_WhenBookStateIsAvailable()
+        {
+            _bookRecord.ReturnBy = _dateTimeNow.AddMonths(_libraryService.MaximumBorrowMonths);
+
+            _libraryService.AddBook(_book, 1);
+            Guid libraryCardId = _libraryService.RegisterLibraryMember(_libraryCard);
+            _bookRecord.LibraryCardId = libraryCardId;
+            _libraryService.BorrowBook(_bookRecord);
+            List<LibraryBook> libraryBooks = _libraryService.ListAllBooks(stateFilter: BookState.Available);
+
+            Assert.Empty(libraryBooks);
         }
     }
 }
