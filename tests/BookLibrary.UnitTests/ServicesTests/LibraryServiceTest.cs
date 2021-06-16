@@ -172,5 +172,54 @@ namespace BookLibrary.UnitTests.ServicesTests
             BusinessRuleException exception = Assert.Throws<BusinessRuleException>(act);
             Assert.Equal("Book to be borrowed is not available at the moment", exception.Message);
         }
+
+        [Fact]
+        public void ReturnBook_ThrowsBookRecordNotFoundException_WhenRecordWithLibraryCardIdDoesNotExist()
+        {
+            Guid libraryCardId = Guid.Empty;
+
+            libraryCardId = _libraryService.RegisterLibraryMember(_libraryCard);
+            void act() => _libraryService.ReturnBook("_isbn1", libraryCardId);
+
+            BookRecordNotFoundException exception = Assert.Throws<BookRecordNotFoundException>(act);
+            Assert.Equal("No record of book being borrowed was found", exception.Message);
+        }
+
+        [Fact]
+        public void ReturnBook_ThrowsBookNotFoundException_WhenBookWithGivenISBNDoesNotExist()
+        {
+            Guid libraryCardId = Guid.Empty;
+            _bookRecord.ReturnBy = _dateTimeNow.AddMonths(_libraryService.MaximumBorrowMonths);
+
+            _libraryService.AddBook(_book, 2);
+            libraryCardId = _libraryService.RegisterLibraryMember(_libraryCard);
+            _bookRecord.LibraryCardId = libraryCardId;
+            _libraryService.BorrowBook(_bookRecord);
+            _libraryService.DeleteBook(_book.ISBN);
+            void act() => _libraryService.ReturnBook(_book.ISBN, libraryCardId);
+
+            BookNotFoundException exception = Assert.Throws<BookNotFoundException>(act);
+            Assert.Equal("Book to be returned was removed from the library. Consider adding it", exception.Message);
+        }
+
+        [Fact]
+        public void ReturnBook_ThrowsBusinessRuleException_WhenReturnOfBookIsOverdue()
+        {
+            LibraryService libraryService = new();
+            Guid libraryCardId = Guid.Empty;
+            _bookRecord.ReturnBy = _dateTimeNow.AddDays(1);
+            int overdueDays = 5;
+
+            libraryService.AddBook(_book, 2);
+            libraryCardId = libraryService.RegisterLibraryMember(_libraryCard);
+            _bookRecord.LibraryCardId = libraryCardId;
+            libraryService.BorrowBook(_bookRecord);
+            _bookRecord = libraryService.LibraryMembers[libraryCardId].Records[0];
+            _bookRecord.ReturnBy = _bookRecord.ReturnBy.AddDays(-overdueDays - 1);
+            void act() => libraryService.ReturnBook(this._book.ISBN, libraryCardId);
+
+            BusinessRuleException exception = Assert.Throws<BusinessRuleException>(act);
+            Assert.Equal($"Book's return is {overdueDays} day(-s) overdue past the period", exception.Message);
+        }
     }
 }
