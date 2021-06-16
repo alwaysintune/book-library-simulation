@@ -17,5 +17,7 @@ namespace BookLibrary.ConsoleApp.Services.Library
             BookFilter bookFilter = null,
             BookState stateFilter = BookState.Available
             );
+
+        void DeleteBook(string ISBN);
     }
 }

@@ -217,5 +217,15 @@ namespace BookLibrary.ConsoleApp.Services.Library
 
             return result;
         }
+
+        public void DeleteBook(string ISBN)
+        {
+            if (!LibraryBooks.ContainsKey(ISBN))
+            {
+                throw new BookNotFoundException("Cannot remove a book which is not owned by the library");
+            }
+
+            LibraryBooks.Remove(ISBN);
+        }
     }
 }
