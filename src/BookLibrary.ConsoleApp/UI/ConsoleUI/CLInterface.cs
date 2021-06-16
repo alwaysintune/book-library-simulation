@@ -22,6 +22,7 @@ namespace BookLibrary.ConsoleApp.UI.ConsoleUI
                 nameof(BorrowBook).SplitCamelCase(),
                 nameof(ReturnBook).SplitCamelCase(),
                 nameof(DeleteBook).SplitCamelCase(),
+                nameof(RegisterLibraryMember).SplitCamelCase(),
             };
         }
 
@@ -49,6 +50,9 @@ namespace BookLibrary.ConsoleApp.UI.ConsoleUI
                             break;
                         case '3':
                             DeleteBook();
+                            break;
+                        case '4':
+                            RegisterLibraryMember();
                             break;
                         default:
                             Console.SetCursorPosition(inputCursorLeft, inputCursorTop);
@@ -145,6 +149,19 @@ namespace BookLibrary.ConsoleApp.UI.ConsoleUI
             string isbn = ReadLineWithMessage($"{nameof(Book.ISBN)}:");
 
             _libraryService.DeleteBook(isbn);
+        }
+
+        private void RegisterLibraryMember()
+        {
+            string fullName = ReadLineWithMessage($"{nameof(LibraryCard.FullName).SplitCamelCase()}:");
+            string street = ReadLineWithMessage($"{nameof(Address.Street)}:");
+            string zipcode = ReadLineWithMessage($"{nameof(Address.Zipcode)}:");
+
+            var address = new Address(street, zipcode);
+            var libraryCard = new LibraryCard(fullName, address);
+
+            Guid id = _libraryService.RegisterLibraryMember(libraryCard);
+            Console.WriteLine($"Your library card ID is:\n{id}");
         }
 
         private static string ReadLine()
