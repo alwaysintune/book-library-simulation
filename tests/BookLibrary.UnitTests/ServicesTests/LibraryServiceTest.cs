@@ -263,5 +263,15 @@ namespace BookLibrary.UnitTests.ServicesTests
             BookNotFoundException exception = Assert.Throws<BookNotFoundException>(act);
             Assert.Equal("Cannot remove a book which is not owned by the library", exception.Message);
         }
+
+        [Fact]
+        public void RegisterLibraryMember_ThrowsArgumentException_WhenLibraryMemberAlreadyExists()
+        {
+            _libraryService.RegisterLibraryMember(_libraryCard);
+            void act() => _libraryService.RegisterLibraryMember(_libraryCard);
+
+            ArgumentException exception = Assert.Throws<ArgumentException>(act);
+            Assert.Equal("Library member with given ID already exists", exception.Message);
+        }
     }
 }
