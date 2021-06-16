@@ -1,8 +1,10 @@
 ﻿using BookLibrary.ConsoleApp.Entities;
+using BookLibrary.ConsoleApp.Enums;
 using BookLibrary.ConsoleApp.Extensions;
 using BookLibrary.ConsoleApp.Services.JsonBuilder;
 using BookLibrary.ConsoleApp.Services.Library;
 using System;
+using System.Collections.Generic;
 
 namespace BookLibrary.ConsoleApp.UI.ConsoleUI
 {
@@ -23,12 +25,15 @@ namespace BookLibrary.ConsoleApp.UI.ConsoleUI
                 nameof(ReturnBook).SplitCamelCase(),
                 nameof(DeleteBook).SplitCamelCase(),
                 nameof(RegisterLibraryMember).SplitCamelCase(),
+                nameof(ListAllBooks).SplitCamelCase(),
             };
         }
 
         public void Start()
         {
             Console.WriteLine("Welcome to the Library!");
+
+            TryLoadFromJson();
 
             int inputCursorLeft = 0;
             ConsoleKeyInfo info;
@@ -53,6 +58,9 @@ namespace BookLibrary.ConsoleApp.UI.ConsoleUI
                             break;
                         case '4':
                             RegisterLibraryMember();
+                            break;
+                        case '5':
+                            ListAllBooks();
                             break;
                         default:
                             Console.SetCursorPosition(inputCursorLeft, inputCursorTop);
@@ -164,6 +172,111 @@ namespace BookLibrary.ConsoleApp.UI.ConsoleUI
             Console.WriteLine($"Your library card ID is:\n{id}");
         }
 
+        private void ListAllBooks()
+        {
+            List<LibraryBook> libraryBooks;
+            ConsoleKeyInfo info = ReadChoiceWithMessage("Filter list? Y/N");
+            if (info.Key == ConsoleKey.N)
+            {
+                libraryBooks = _libraryService.ListAllBooks();
+
+                Console.WriteLine($"Book count: {libraryBooks.Count}");
+                foreach (var libraryBook in libraryBooks)
+                {
+                    Console.WriteLine(libraryBook.Book);
+                    Console.WriteLine(libraryBook.Inventory);
+                }
+
+                TrySaveJson(libraryBooks);
+
+                return;
+            }
+
+            var bookFilter = new BookFilter();
+
+            info = ReadChoiceWithMessage(
+                $"Filter list by book {nameof(BookFilter.Name)}? Y/N");
+            if (info.Key == ConsoleKey.Y)
+            {
+                bookFilter.Name = ReadLineWithMessage(
+                    $"{nameof(BookFilter.Name)}:");
+            }
+
+            info = ReadChoiceWithMessage(
+                $"Filter list by book {nameof(BookFilter.Author)}? Y/N");
+            if (info.Key == ConsoleKey.Y)
+            {
+                bookFilter.Author = ReadLineWithMessage(
+                    $"{nameof(BookFilter.Author)}:");
+            }
+
+            info = ReadChoiceWithMessage(
+                $"Filter list by book {nameof(BookFilter.Category)}? Y/N");
+            if (info.Key == ConsoleKey.Y)
+            {
+                bookFilter.Category = ReadLineWithMessage(
+                    $"{nameof(BookFilter.Category)}:");
+            }
+
+            info = ReadChoiceWithMessage(
+                $"Filter list by book {nameof(BookFilter.Language)}? Y/N");
+            if (info.Key == ConsoleKey.Y)
+            {
+                bookFilter.Category = ReadLineWithMessage(
+                    $"{nameof(BookFilter.Language)}:");
+            }
+
+            info = ReadChoiceWithMessage(
+                $"Filter list by book {nameof(BookFilter.ISBN)}? Y/N");
+            if (info.Key == ConsoleKey.Y)
+            {
+                bookFilter.Category = ReadLineWithMessage(
+                    $"{nameof(BookFilter.ISBN)}:");
+            }
+
+            BookState stateFilter = BookState.Available;
+            info = ReadChoiceWithMessage(
+                $"Choose one of: list taken or available books? T/A",
+                first: ConsoleKey.T,
+                second: ConsoleKey.A);
+            if (info.Key == ConsoleKey.T)
+            {
+                stateFilter = BookState.Taken;
+            }
+
+            libraryBooks = _libraryService.ListAllBooks(bookFilter, stateFilter);
+
+            Console.WriteLine($"Book count: {libraryBooks.Count}");
+            foreach (var libraryBook in libraryBooks)
+            {
+                Console.WriteLine(libraryBook.Book);
+                Console.WriteLine(libraryBook.Inventory);
+            }
+        }
+
+        private void TryLoadFromJson()
+        {
+            ConsoleKeyInfo input = ReadChoiceWithMessage("Load library books from JSON? Y/N");
+
+            if (input.Key == ConsoleKey.Y)
+            {
+                string filePath = ReadLineWithMessage("File Path:");
+                var libraryBooks = _jsonService.ReadFromFile<List<LibraryBook>>(filePath);
+                _libraryService = new LibraryService(libraryBooks);
+            }
+        }
+
+        private void TrySaveJson(List<LibraryBook> libraryBooks)
+        {
+            ConsoleKeyInfo input = ReadChoiceWithMessage("Save library books to JSON? Y/N");
+
+            if (input.Key == ConsoleKey.Y)
+            {
+                string filePath = ReadLineWithMessage("File Path:");
+                _jsonService.WriteToFile(libraryBooks, filePath);
+            }
+        }
+
         private static string ReadLine()
         {
             string result = Console.ReadLine();
@@ -185,6 +298,28 @@ namespace BookLibrary.ConsoleApp.UI.ConsoleUI
         {
             Console.WriteLine(msg);
             return ReadLine();
+        }
+
+        private static ConsoleKeyInfo ReadKeyWithMessage(string msg)
+        {
+            Console.WriteLine(msg);
+            return ReadKey();
+        }
+
+        private static ConsoleKeyInfo ReadChoiceWithMessage(
+            string msg,
+            ConsoleKey first = ConsoleKey.Y,
+            ConsoleKey second = ConsoleKey.N
+            )
+        {
+            ConsoleKeyInfo info = ReadKeyWithMessage(msg);
+
+            while (info.Key != first && info.Key != second)
+            {
+                info = ReadKeyWithMessage($"Please enter one of the choices: {first}/{second}");
+            }
+
+            return info;
         }
     }
 }

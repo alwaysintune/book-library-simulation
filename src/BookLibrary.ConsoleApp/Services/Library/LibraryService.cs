@@ -21,6 +21,15 @@ namespace BookLibrary.ConsoleApp.Services.Library
             LibraryMembers = new Dictionary<Guid, LibraryMember>();
         }
 
+        public LibraryService(List<LibraryBook> libraryBooks)
+            : this()
+        {
+            libraryBooks.ForEach(unit =>
+            {
+                LibraryBooks.Add(unit.Book.ISBN, unit);
+            });
+        }
+
         /// <summary>
         /// If book already exists, only increases availability count
         /// </summary>
@@ -31,7 +40,7 @@ namespace BookLibrary.ConsoleApp.Services.Library
             if (count <= 0)
             {
                 throw new ArgumentException(
-                    "Count may not be equal to or less than zero", 
+                    "Count may not be equal to or less than zero",
                     paramName: nameof(count)
                     );
             }
@@ -148,7 +157,7 @@ namespace BookLibrary.ConsoleApp.Services.Library
                 .Values.ToList()
                 .AsEnumerable();
 
-            if(bookFilter != null)
+            if (bookFilter != null)
             {
                 if (bookFilter.Author != null)
                 {
