@@ -227,5 +227,17 @@ namespace BookLibrary.ConsoleApp.Services.Library
 
             LibraryBooks.Remove(ISBN);
         }
+
+        public Guid RegisterLibraryMember(LibraryCard libraryCard)
+        {
+            if (LibraryMembers.ContainsKey(libraryCard.Id))
+            {
+                throw new ArgumentException("Library member with given ID already exists");
+            }
+
+            LibraryMembers.Add(libraryCard.Id, new LibraryMember(libraryCard));
+
+            return libraryCard.Id;
+        }
     }
 }

@@ -19,5 +19,11 @@ namespace BookLibrary.ConsoleApp.Services.Library
             );
 
         void DeleteBook(string ISBN);
+
+        Guid RegisterLibraryMember(LibraryCard libraryCard);
+
+        public int MaximumBorrowMonths { get; }
+
+        public int MaximumBorrowedBooks { get; }
     }
 }
