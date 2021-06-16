@@ -20,6 +20,7 @@ namespace BookLibrary.ConsoleApp.UI.ConsoleUI
             _actionArray = new string[] {
                 nameof(AddBook).SplitCamelCase(),
                 nameof(BorrowBook).SplitCamelCase(),
+                nameof(ReturnBook).SplitCamelCase(),
             };
         }
 
@@ -41,6 +42,9 @@ namespace BookLibrary.ConsoleApp.UI.ConsoleUI
                             break;
                         case '1':
                             BorrowBook();
+                            break;
+                        case '2':
+                            ReturnBook();
                             break;
                         default:
                             Console.SetCursorPosition(inputCursorLeft, inputCursorTop);
@@ -116,6 +120,20 @@ namespace BookLibrary.ConsoleApp.UI.ConsoleUI
 
             var bookRecord = new BookRecord(isbn, libraryCardId, returnByUtc);
             _libraryService.BorrowBook(bookRecord);
+        }
+
+        private void ReturnBook()
+        {
+            string isbn = ReadLineWithMessage($"{nameof(BookRecord.ISBN)}:");
+
+            string input = ReadLineWithMessage($"{nameof(BookRecord.LibraryCardId).SplitCamelCase()}:");
+            Guid libraryCardId;
+            while (!Guid.TryParse(input, out libraryCardId))
+            {
+                input = ReadLineWithMessage($"Please enter a valid ID. For example, {Guid.Empty}");
+            }
+
+            _libraryService.ReturnBook(isbn, libraryCardId);
         }
 
         private static string ReadLine()
