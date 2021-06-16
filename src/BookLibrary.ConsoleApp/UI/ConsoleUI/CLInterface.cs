@@ -26,6 +26,8 @@ namespace BookLibrary.ConsoleApp.UI.ConsoleUI
                 nameof(DeleteBook).SplitCamelCase(),
                 nameof(RegisterLibraryMember).SplitCamelCase(),
                 nameof(ListAllBooks).SplitCamelCase(),
+                nameof(TryPrintAvailableActions).SplitCamelCase(),
+                "To Quit press Z"
             };
         }
 
@@ -34,6 +36,8 @@ namespace BookLibrary.ConsoleApp.UI.ConsoleUI
             Console.WriteLine("Welcome to the Library!");
 
             TryLoadFromJson();
+
+            if (!TryPrintAvailableActions(_actionArray)) { return; }
 
             int inputCursorLeft = 0;
             ConsoleKeyInfo info;
@@ -62,6 +66,9 @@ namespace BookLibrary.ConsoleApp.UI.ConsoleUI
                         case '5':
                             ListAllBooks();
                             break;
+                        case '6':
+                            TryPrintAvailableActions(_actionArray);
+                            break;
                         default:
                             Console.SetCursorPosition(inputCursorLeft, inputCursorTop);
                             Console.Write(' ');
@@ -75,7 +82,7 @@ namespace BookLibrary.ConsoleApp.UI.ConsoleUI
                     continue;
                 }
 
-                Console.WriteLine("Action Completed..");
+                Console.WriteLine("Action Completed.. To print available actions press 6");
             }
         }
 
@@ -275,6 +282,23 @@ namespace BookLibrary.ConsoleApp.UI.ConsoleUI
                 string filePath = ReadLineWithMessage("File Path:");
                 _jsonService.WriteToFile(libraryBooks, filePath);
             }
+        }
+
+        private static bool TryPrintAvailableActions(string[] actions)
+        {
+            if (actions == null || actions == Array.Empty<string>())
+            {
+                Console.WriteLine("No action is available at the moment");
+                return false;
+            }
+
+            Console.WriteLine("Available actions:");
+            for (int i = 0; i < actions.Length; i++)
+            {
+                Console.WriteLine($"[{i}]: {actions[i]}");
+            }
+
+            return true;
         }
 
         private static string ReadLine()
